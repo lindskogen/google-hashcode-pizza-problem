@@ -15,4 +15,11 @@ internal class PizzaTest {
         assertEquals(1, Slice(Coordinate(0, 0), Coordinate(0, 0)).area())
 
     }
+
+    @org.junit.jupiter.api.Test
+    fun isValidSlice() {
+    }
+
+
 }
+

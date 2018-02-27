@@ -14,6 +14,20 @@ data class Slice(val first: Coordinate, val second: Coordinate) {
         return "$first $second"
     }
 
+    fun overlap(other: Slice): Boolean {
+        // Left x
+        val leftX = Math.max(this.first.x, other.first.x)
+        // Right x
+        val rightX = Math.min(this.second.x, other.second.x)
+        // Bottom y
+        val botY = Math.max(this.first.y, other.first.y)
+        // TopY
+        val topY = Math.min(this.second.y, other.second.y)
+
+        return rightX > leftX && topY > botY
+
+    }
+
     fun coordinatesList(): Sequence<Coordinate> {
         val second = this.second
         val first = this.first
