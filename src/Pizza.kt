@@ -1,9 +1,37 @@
 import kotlin.coroutines.experimental.buildSequence
 import kotlin.math.abs
+import kotlin.math.min
 
 typealias Slice = Pair<Pizza.Coordinate, Pizza.Coordinate>
 typealias Row = List<Pizza.Ingredient>
 typealias Grid = List<Row>
+
+
+fun Slice.area(): Int {
+    return (abs(this.first.x - this.second.x) + 1) * (abs(this.first.y - this.second.y) + 1)
+}
+
+fun Slice.value(): Int {
+    return area()
+}
+
+fun Slice.toString(): String {
+    return "$first $second"
+}
+
+fun Slice.coordinatesList(): Sequence<Pizza.Coordinate> {
+    val second = this.second
+    val first = this.first
+    return buildSequence {
+        (first.x..second.x).forEach { x ->
+            (first.y..second.y).forEach { y ->
+                yield(Pizza.Coordinate(x, y))
+            }
+
+        }
+    }
+
+}
 
 class Pizza(
         private val height: Int,
@@ -11,28 +39,13 @@ class Pizza(
         private val minCellsPerIngredient: Int,
         private val maxCells: Int,
         private val grid: Grid,
-        private val slices: List<Slice> = emptyList()) {
+        private val slices: MutableList<Slice> = mutableListOf(),
+        private val usedCoordinates: MutableSet<Coordinate> = mutableSetOf()) {
 
-    data class Coordinate(val x: Int, val y: Int)
-
-
-
-    fun Slice.area(): Int {
-        return abs(this.first.x - this.second.x) * abs(this.first.y - this.second.y)
-    }
-
-    fun Slice.coordinatesList(): Sequence<Coordinate> {
-        val second = this.second
-        val first = this.first
-        return buildSequence {
-            (first.x .. second.x).forEach { x ->
-                (first.y .. second.y).forEach {y ->
-                    yield(Coordinate(x,y))
-                }
-
-            }
+    data class Coordinate(val x: Int, val y: Int) {
+        override fun toString(): String {
+            return "$x $y"
         }
-
     }
 
     enum class Ingredient {
@@ -48,10 +61,87 @@ class Pizza(
         }
 
     }
-    
+
+
+    fun solve(): List<Slice> {
+        var currentCoord = Pizza.Coordinate(0, 0)
+
+        while (true) {
+            val slicesAtCoord = possibleSlicesAt(currentCoord)
+            val bestSlice = takeBestPossibleSlice(slicesAtCoord)
+            if (bestSlice == null) {
+                usedCoordinates.add(currentCoord)
+            } else {
+                addSlice(bestSlice)
+            }
+
+            currentCoord = nextFreeCoordinate(currentCoord) ?: break
+        }
+
+        return slices.toList()
+    }
+
+    fun addSlice(slice: Slice) {
+        slices.add(slice)
+        usedCoordinates.addAll(slice.coordinatesList())
+    }
+
+    fun nextFreeCoordinate(coordinate: Coordinate): Coordinate? {
+
+        fun nextCoordinate(coordinate: Coordinate): Coordinate? {
+            val (x, y) = coordinate
+            return when {
+                x >= width && y >= height -> null
+                x >= width -> Coordinate(0, y + 1)
+                else -> Coordinate(x + 1, y)
+            }
+        }
+
+        var currentCoordinate = coordinate
+        while (usedCoordinates.contains(currentCoordinate)) {
+            currentCoordinate = nextCoordinate(currentCoordinate) ?: return null
+        }
+
+        return currentCoordinate
+    }
+
+    fun takeBestPossibleSlice(slices: List<Slice>): Slice? {
+        return slices.maxBy { it.value() }
+
+    }
+
+    fun possibleSlicesAt(coordinate: Coordinate): List<Slice> {
+        val possibleSlices = mutableListOf<Slice>()
+
+        val minCellsInSlice = minCellsPerIngredient * 2
+
+
+        val xMin = coordinate.x
+        val xMax = min(coordinate.x + maxCells, width)
+
+        val yMin = coordinate.y
+        val yMax = min(coordinate.y + maxCells, height)
+
+        for (x in xMin until xMax) {
+            for (y in yMin until yMax) {
+                val s = Slice(coordinate, Coordinate(x, y))
+                if (s.area() < minCellsInSlice || maxCells < s.area()) {
+                    continue
+                }
+
+                if (isValidSlice(s)) {
+                    possibleSlices.add(s)
+                }
+
+            }
+        }
+
+        return possibleSlices.toList()
+    }
+
 
     fun isValidSlice(slice: Slice): Boolean {
-        if (slice.area() < 2*this.minCellsPerIngredient || slice.area() > this.maxCells) {
+        if (slice.area() < 2 * this.minCellsPerIngredient || slice.area() > this.maxCells) {
             return false
         }
 
@@ -59,7 +149,7 @@ class Pizza(
         var countMushroom = 0
 
         for (coord in slice.coordinatesList()) {
-            when(this.grid[coord.x][coord.y]) {
+            when (this.grid[coord.y][coord.x]) {
                 Ingredient.Tomato -> countTomato++
                 Ingredient.Mushroom -> countMushroom++
             }
@@ -70,6 +160,15 @@ class Pizza(
         }
 
         return !(countTomato < this.minCellsPerIngredient || countMushroom < this.minCellsPerIngredient)
+    }
+
+    fun toGoogleString(): String {
+        val res = StringBuilder()
+        res.appendln(slices.size)
+        slices.forEach {
+            res.appendln(it)
+        }
+        return res.toString()
     }
 
     override fun toString(): String {
