@@ -15,7 +15,7 @@ fun Slice.value(): Int {
     return area()
 }
 
-fun Slice.toString(): String {
+fun Slice.myToString(): String {
     return "$first $second"
 }
 
@@ -44,7 +44,7 @@ class Pizza(
 
     data class Coordinate(val x: Int, val y: Int) {
         override fun toString(): String {
-            return "$x $y"
+            return "$y $x"
         }
     }
 
@@ -166,7 +166,7 @@ class Pizza(
         val res = StringBuilder()
         res.appendln(slices.size)
         slices.forEach {
-            res.appendln(it)
+            res.appendln(it.myToString())
         }
         return res.toString()
     }
