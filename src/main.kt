@@ -18,6 +18,4 @@ fun main(args: Array<String>) {
 
         File(challenge + ".out").writeText(pizza.toGoogleString())
     }
-
-
 }

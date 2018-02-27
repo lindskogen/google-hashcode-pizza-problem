@@ -2,36 +2,36 @@ import kotlin.coroutines.experimental.buildSequence
 import kotlin.math.abs
 import kotlin.math.min
 
-typealias Slice = Pair<Pizza.Coordinate, Pizza.Coordinate>
-typealias Row = List<Pizza.Ingredient>
-typealias Grid = List<Row>
-
-
-fun Slice.area(): Int {
-    return (abs(this.first.x - this.second.x) + 1) * (abs(this.first.y - this.second.y) + 1)
-}
-
-fun Slice.value(): Int {
-    return area()
-}
-
-fun Slice.myToString(): String {
-    return "$first $second"
-}
-
-fun Slice.coordinatesList(): Sequence<Pizza.Coordinate> {
-    val second = this.second
-    val first = this.first
-    return buildSequence {
-        (first.x..second.x).forEach { x ->
-            (first.y..second.y).forEach { y ->
-                yield(Pizza.Coordinate(x, y))
-            }
-
-        }
+data class Slice(val first: Pizza.Coordinate, val second: Pizza.Coordinate) {
+    fun area(): Int {
+        return (abs(this.first.x - this.second.x) + 1) * (abs(this.first.y - this.second.y) + 1)
     }
 
+    fun value(): Int {
+        return area()
+    }
+
+    override fun toString(): String {
+        return "$first $second"
+    }
+
+    fun coordinatesList(): Sequence<Pizza.Coordinate> {
+        val second = this.second
+        val first = this.first
+        return buildSequence {
+            (first.x..second.x).forEach { x ->
+                (first.y..second.y).forEach { y ->
+                    yield(Pizza.Coordinate(x, y))
+                }
+
+            }
+        }
+
+    }
 }
+
+typealias Row = List<Pizza.Ingredient>
+typealias Grid = List<Row>
 
 class Pizza(
         private val height: Int,
@@ -166,7 +166,7 @@ class Pizza(
         val res = StringBuilder()
         res.appendln(slices.size)
         slices.forEach {
-            res.appendln(it.myToString())
+            res.appendln(it)
         }
         return res.toString()
     }
