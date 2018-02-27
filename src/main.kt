@@ -2,7 +2,7 @@ import java.io.File
 
 fun main(args: Array<String>) {
 
-    val challenges = listOf("example")//, "small", "medium", "big")
+    val challenges = listOf("example", "small", "medium", "big")
 
     challenges.forEach { challenge ->
         val pizza = Pizza.parse(File(challenge + ".in").readText())

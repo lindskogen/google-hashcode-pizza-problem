@@ -12,7 +12,7 @@ class Pizza(
         private val maxCells: Int,
         private val grid: Grid,
         private val slices: MutableList<Slice> = mutableListOf(),
-        private val usedCoordinates: MutableSet<Coordinate> = mutableSetOf()) {
+        val usedCoordinates: MutableSet<Coordinate> = mutableSetOf()) {
 
     enum class Ingredient {
         Tomato {
@@ -89,22 +89,13 @@ class Pizza(
         val yMax = min(coordinate.y + maxCells, height)
 
         for (x in xMin until xMax) {
-            for (y in yMin until yMax) {
-                val s = Slice(coordinate, Coordinate(x, y))
-                if (s.area() < minCellsInSlice || maxCells < s.area()) {
-                    continue
-                }
-
-                if (isValidSlice(s)) {
-                    possibleSlices.add(s)
-                }
-
-            }
+            (yMin until yMax)
+                    .map { Slice(coordinate, Coordinate(x, it)) }
+                    .filterTo(possibleSlices) { it.area() in minCellsInSlice..maxCells && isValidSlice(it) }
         }
 
         return possibleSlices.toList()
     }
-
 
     fun isValidSlice(slice: Slice): Boolean {
         if (slice.area() < 2 * this.minCellsPerIngredient || slice.area() > this.maxCells) {
@@ -119,13 +110,11 @@ class Pizza(
                 Ingredient.Tomato -> countTomato++
                 Ingredient.Mushroom -> countMushroom++
             }
-
-            if (countTomato >= this.minCellsPerIngredient && countMushroom >= this.minCellsPerIngredient) {
-                return true
-            }
         }
 
-        return !(countTomato < this.minCellsPerIngredient || countMushroom < this.minCellsPerIngredient)
+        val enoughOfEachIngredient = countTomato >= this.minCellsPerIngredient && countMushroom >= this.minCellsPerIngredient
+
+        return enoughOfEachIngredient && !slice.overlap2(usedCoordinates)
     }
 
     fun toGoogleString(): String {
