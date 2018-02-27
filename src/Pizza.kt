@@ -2,34 +2,6 @@ import kotlin.coroutines.experimental.buildSequence
 import kotlin.math.abs
 import kotlin.math.min
 
-data class Slice(val first: Pizza.Coordinate, val second: Pizza.Coordinate) {
-    fun area(): Int {
-        return (abs(this.first.x - this.second.x) + 1) * (abs(this.first.y - this.second.y) + 1)
-    }
-
-    fun value(): Int {
-        return area()
-    }
-
-    override fun toString(): String {
-        return "$first $second"
-    }
-
-    fun coordinatesList(): Sequence<Pizza.Coordinate> {
-        val second = this.second
-        val first = this.first
-        return buildSequence {
-            (first.x..second.x).forEach { x ->
-                (first.y..second.y).forEach { y ->
-                    yield(Pizza.Coordinate(x, y))
-                }
-
-            }
-        }
-
-    }
-}
-
 typealias Row = List<Pizza.Ingredient>
 typealias Grid = List<Row>
 
@@ -41,12 +13,6 @@ class Pizza(
         private val grid: Grid,
         private val slices: MutableList<Slice> = mutableListOf(),
         private val usedCoordinates: MutableSet<Coordinate> = mutableSetOf()) {
-
-    data class Coordinate(val x: Int, val y: Int) {
-        override fun toString(): String {
-            return "$y $x"
-        }
-    }
 
     enum class Ingredient {
         Tomato {
@@ -64,7 +30,7 @@ class Pizza(
 
 
     fun solve(): List<Slice> {
-        var currentCoord = Pizza.Coordinate(0, 0)
+        var currentCoord = Coordinate(0, 0)
 
         while (true) {
             val slicesAtCoord = possibleSlicesAt(currentCoord)
