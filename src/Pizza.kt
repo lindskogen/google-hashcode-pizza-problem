@@ -44,7 +44,40 @@ class Pizza(
             currentCoord = nextFreeCoordinate(currentCoord) ?: break
         }
 
+        usedCoordinates.removeIf { true }
+        slices.forEach { usedCoordinates.addAll(it.coordinatesList()) }
+
+        expandSlices()
+
         return slices.toList()
+    }
+
+    fun removeSlice(slice: Slice) {
+        usedCoordinates.removeAll(slice.coordinatesList())
+        slices.remove(slice)
+    }
+
+    fun expandSlices() {
+        for (it in slices.toList()) {
+            this.removeSlice(it)
+            var newX = it.second.x
+            var newY = it.second.y
+
+            do {
+                newY++
+                val newSlice = Slice(it.first, Coordinate(newX, newY))
+            } while (isValidSlice(newSlice))
+            newY--
+
+
+            do {
+                newX++
+                val newSlice = Slice(it.first, Coordinate(newX, newY))
+            } while (isValidSlice(newSlice))
+            newX--
+
+            this.addSlice(Slice(it.first, Coordinate(newX, newY)))
+        }
     }
 
     fun addSlice(slice: Slice) {
@@ -72,7 +105,7 @@ class Pizza(
     }
 
     fun takeBestPossibleSlice(slices: List<Slice>): Slice? {
-        return slices.maxBy { it.value() }
+        return slices.maxBy { -it.value() }
 
     }
 
@@ -98,7 +131,10 @@ class Pizza(
     }
 
     fun isValidSlice(slice: Slice): Boolean {
-        if (slice.area() < 2 * this.minCellsPerIngredient || slice.area() > this.maxCells) {
+        if (slice.area() < 2 * this.minCellsPerIngredient ||
+                slice.area() > this.maxCells ||
+                slice.overlap2(usedCoordinates) ||
+                slice.second.x >= width || slice.second.y >= height) {
             return false
         }
 
@@ -114,7 +150,7 @@ class Pizza(
 
         val enoughOfEachIngredient = countTomato >= this.minCellsPerIngredient && countMushroom >= this.minCellsPerIngredient
 
-        return enoughOfEachIngredient && !slice.overlap2(usedCoordinates)
+        return enoughOfEachIngredient
     }
 
     fun toGoogleString(): String {
